@@ -1,6 +1,15 @@
 int x;
 int y;
 int z;
+int a;
+int b;
+int c;
+int d;
+int e;
+int f;
+int v;
+int w;
+
 /*
   Menu driven control of a sound board over UART.
   Commands for playing by # or by name (full 11-char name)
@@ -37,28 +46,159 @@ Adafruit_Soundboard sfx = Adafruit_Soundboard(&ss, NULL, SFX_RST);
 
 void setup()
 {
+  Serial.begin(115200);
+  Serial.println("Adafruit Sound Board!");
+  
   ss.begin(9600);
   pinMode(3, INPUT_PULLUP);
   pinMode(2, INPUT_PULLUP);
   pinMode(1, INPUT_PULLUP);
+  pinMode(0, INPUT_PULLUP);
+  pinMode(7, INPUT_PULLUP);
+  pinMode(8, INPUT_PULLUP);
+  pinMode(9, INPUT_PULLUP);
+  pinMode(11, INPUT_PULLUP);
+  pinMode(12, INPUT_PULLUP);
+
 }
 
 void loop()
 {
+    flushInput();
   x = digitalRead(3);
   y = digitalRead(2);
   z = digitalRead(1);
+  a = digitalRead(0);
+  b = digitalRead(7);
+  c = digitalRead(8);
+  d = digitalRead(9);
+  e = digitalRead(11);
+  f = digitalRead (12);
+
   if (x == LOW)
   {
-    digitalWrite(7, !  sfx.playTrack(7) );
+    sfx.playTrack(1);
   }
   if (y == LOW)
   {
-    digitalWrite(5, !  sfx.playTrack(5) );
+    sfx.playTrack(2);
   }
   if (z == LOW)
   {
-    digitalWrite(4, !  sfx.playTrack(4) );
+    sfx.playTrack(3);
+  }
+  if (a == LOW)
+  {
+    sfx.playTrack(4);
   }
 
+  if (b == LOW)
+  {
+    sfx.playTrack(5);
+  }
+
+  if (c == LOW)
+  {
+    sfx.playTrack(6);
+  }
+
+  if (d == LOW)
+  {
+    sfx.playTrack(7);
+  }
+  
+  if (e == LOW)
+  {
+    if (! sfx.pause() ) Serial.println("Failed to pause");
+    v = sfx.volUp();
+    delay(400);
+    Serial.println(v);
+        flushInput();
+        if (! (v = sfx.volUp()) ) {
+        Serial.println("Failed to adjust");
+      } else {
+        Serial.print("Volume: ");
+        Serial.println(v);
+      }
+
+  }
+  if (f == LOW)
+  {
+    w = sfx.volDown();
+    delay(400);
+    Serial.println(w);
+        flushInput();
+         if (! (v=sfx.volDown()) ) {
+        Serial.println("Failed to adjust");
+      } else { 
+        Serial.print("Volume: "); 
+        Serial.println(v);
+      }
+
+  }
+
+
+
 }
+
+void flushInput() {
+  // Read all available serial input to flush pending data.
+  uint16_t timeoutloop = 0;
+  while (timeoutloop++ < 40) {
+    while(ss.available()) {
+      ss.read();
+      timeoutloop = 0;  // If char was received reset the timer
+    }
+    delay(1);
+  }
+}
+
+char readBlocking() {
+  while (!Serial.available());
+  return Serial.read();
+}
+
+uint16_t readnumber() {
+  uint16_t x = 0;
+  char c;
+  while (! isdigit(c = readBlocking())) {
+    //Serial.print(c);
+  }
+  Serial.print(c);
+  x = c - '0';
+  while (isdigit(c = readBlocking())) {
+    Serial.print(c);
+    x *= 10;
+    x += c - '0';
+  }
+  return x;
+}
+
+uint8_t readline(char *buff, uint8_t maxbuff) {
+  uint16_t buffidx = 0;
+  
+  while (true) {
+    if (buffidx > maxbuff) {
+      break;
+    }
+
+    if (Serial.available()) {
+      char c =  Serial.read();
+      //Serial.print(c, HEX); Serial.print("#"); Serial.println(c);
+
+      if (c == '\r') continue;
+      if (c == 0xA) {
+        if (buffidx == 0) {  // the first 0x0A is ignored
+          continue;
+        }
+        buff[buffidx] = 0;  // null term
+        return buffidx;
+      }
+      buff[buffidx] = c;
+      buffidx++;
+    }
+  }
+  buff[buffidx] = 0;  // null term
+  return buffidx;
+}
+/************************ MENU HELPERS ***************************/

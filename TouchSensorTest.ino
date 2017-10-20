@@ -44,12 +44,12 @@ void setup() {
 
 void loop() {
   // Get the currently touched pads
-  touch = cap.touched();
+  currtouched = cap.touched();
   if (touch != 0) 
   {
     Serial.print(touch);
   }
-  delay(200);
+  delay(100);
   
   for (uint8_t i=0; i<12; i++) {
     // it if *is* touched and *wasnt* touched before, alert!
